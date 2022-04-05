@@ -1,7 +1,6 @@
-
-DOCUMENT_DIR = $(BUILD_DIR)/doc/html
-DOCUMENT_TARGET = $(DOCUMENT_DIR)/index.html
-
+# rule for build documentation
 $(DOCUMENT_TARGET) : $(CODE_SRC)
 	@mkdir -p $(DOCUMENT_DIR)
+	@echo "    DOXY      project"
 	@doxygen Doxyfile
+
