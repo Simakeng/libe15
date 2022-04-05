@@ -1,10 +1,25 @@
-BUILD_DIR = build
+# add this to prevent removing intermediate files.
+.SECONDARY:
 
+# Default target
+all: doc test
+
+# Config
+include scripts/config.mk
+
+# Rules for search target
+include scripts/source.mk
+
+# Rules for build documentation
 include scripts/doc.mk
 
-all: doc
+# Rules for build and unit test
+include scripts/test.mk
 
 doc: $(DOCUMENT_TARGET)
+
+test: $(TEST_TARGET)
+	@echo "add code here to execute generated test"
 
 clean:
 	@rm -rf $(BUILD_DIR)
@@ -15,3 +30,5 @@ help:
 	@echo "  target: clean   - clean all generated files"
 	@echo "  target: all     - build all target"
 	@echo "  target: help    - display this help message"
+
+.PHONY: doc test

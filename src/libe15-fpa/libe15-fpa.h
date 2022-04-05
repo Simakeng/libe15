@@ -8,28 +8,28 @@
  *
  */
 
- /**
-  @defgroup libe15-fpa libe15-fpa
-     see libe15-fpa.h
- */
+/**
+ @defgroup libe15-fpa libe15-fpa
+    see libe15-fpa.h
+*/
 
 #include <stdint.h>
 
- /******************************************
-  *                Configs                 *
-  ******************************************/
+/******************************************
+ *                Configs                 *
+ ******************************************/
 
-  /**
-   * fixed point value type, should be the same as cpu's int type
-   */
+/**
+ * fixed point value type, should be the same as cpu's int type
+ */
 #define fixed_value_t int32_t
 
-   /**
-    * fixed point position change this as you need
-    */
+/**
+ * fixed point position change this as you need
+ */
 #define FIXED_WIDTH 16
 
-    /// 0
+/// 0
 #define FPA_ZERO ((fixed_value_t)0)
 
 /// π
@@ -41,7 +41,6 @@ typedef struct __tag_fixed_t
     fixed_value_t val;
 } fixed_t;
 
-
 /**
  * @brief add two fixed point value
  *
@@ -51,7 +50,7 @@ typedef struct __tag_fixed_t
  */
 static inline fixed_t fixed_add(fixed_t a, fixed_t b)
 {
-    return (fixed_t) { a.val + b.val };
+    return (fixed_t){a.val + b.val};
 }
 /**
  * @brief sub two fixed point value
@@ -62,7 +61,7 @@ static inline fixed_t fixed_add(fixed_t a, fixed_t b)
  */
 static inline fixed_t fixed_sub(fixed_t a, fixed_t b)
 {
-    return (fixed_t) { a.val - b.val };
+    return (fixed_t){a.val - b.val};
 }
 /**
  * @brief multiply two fixed point value
@@ -71,15 +70,14 @@ static inline fixed_t fixed_sub(fixed_t a, fixed_t b)
  * @param b operand b
  * @return fixed_t a * b
  */
-static inline fixed_t fixed_mul(fixed_t a, fixed_t b) 
+static inline fixed_t fixed_mul(fixed_t a, fixed_t b)
 {
     fixed_value_t a_hi, a_lo, temp;
     a_hi = a.val >> FIXED_WIDTH;
     a_lo = a.val & ((1 << FIXED_WIDTH) - 1);
     temp = a_hi * b.val + ((a_lo * b.val) >> FIXED_WIDTH);
-    return (fixed_t) { temp };
+    return (fixed_t){temp};
 }
-
 
 /**
  * @brief divide two fixed point value
@@ -92,7 +90,7 @@ static inline fixed_t fixed_div(fixed_t a, fixed_t b)
 {
     int64_t la = a.val;
     la = la << FIXED_WIDTH;
-    return (fixed_t) { la / b.val };
+    return (fixed_t){la / b.val};
 }
 
 /**
@@ -105,7 +103,7 @@ static inline fixed_t fixed_abs(fixed_t a)
 {
 
     fixed_value_t sign_bit = a.val >> (sizeof(fixed_value_t) * 8 - 1);
-    return (fixed_t) { (a.val + sign_bit) ^ a.val };
+    return (fixed_t){(a.val + sign_bit) ^ a.val};
 }
 
 /**
@@ -115,7 +113,14 @@ static inline fixed_t fixed_abs(fixed_t a)
  * @param b operand b
  * @return fixed_t max{a,b}
  */
-inline fixed_t fixed_max(fixed_t a, fixed_t b);
+inline fixed_t fixed_max(fixed_t a, fixed_t b)
+{
+    fixed_value_t diff = b.val - a.val;
+    return (fixed_t){
+        b.val - (diff & (diff >> (sizeof(fixed_value_t) * 8 - 1)))
+
+    };
+}
 
 /**
  * @brief get the smaller one's value of two fixed point value
@@ -124,21 +129,31 @@ inline fixed_t fixed_max(fixed_t a, fixed_t b);
  * @param b operand b
  * @return fixed_t min{a,b}
  */
-inline fixed_t fixed_min(fixed_t a, fixed_t b);
+inline fixed_t fixed_min(fixed_t a, fixed_t b)
+{
+    fixed_value_t diff = b.val - a.val;
+    return (fixed_t){
+        a.val + (diff & (diff >> (sizeof(fixed_value_t) * 8 - 1)))};
+}
 
 /**
  * @brief convert fixed point value to float
  * @param a value to convert
  * @return float
  */
-inline float fixed_to_float(fixed_t a);
-
+inline float fixed_to_float(fixed_t a)
+{
+    return 0.0f;
+}
 /**
  * @brief convert float to fixed point value
  * @param val value to convert
  * @return fixed_t
  */
-inline fixed_t fixed_from_float(float val);
+inline fixed_t fixed_from_float(float val)
+{
+    return (fixed_t){0};
+}
 
 /**
  * @brief convert fixed point value to int
@@ -147,16 +162,18 @@ inline fixed_t fixed_from_float(float val);
  */
 static inline fixed_t fixed_from_int(int32_t val)
 {
-    return (fixed_t) { val << FIXED_WIDTH };
+    return (fixed_t){val << FIXED_WIDTH};
 }
-
 
 /**
  * @brief parse string to get fixed point value
  * @param str string contains data
  * @return fixed_t
  */
-inline fixed_t fixed_atof(const char* str);
+inline fixed_t fixed_atof(const char *str)
+{
+    return (fixed_t){0};
+}
 
 /**
  * @brief convert fixed point value to 10-based string into buffer
@@ -164,7 +181,10 @@ inline fixed_t fixed_atof(const char* str);
  * @param str buffer to store string
  * @return int 0 if success, -1 if failed
  */
-inline int fixed_ftoa(fixed_t val, char* str);
+inline int fixed_ftoa(fixed_t val, char *str)
+{
+    return 0;
+}
 
 /**
  * @brief get the square root of a fixed point value
@@ -175,9 +195,9 @@ inline int fixed_ftoa(fixed_t val, char* str);
 static inline fixed_t fixed_sqrt(fixed_t a)
 {
     int i = 0;
-    // 0.5 
-    const fixed_t div_2 = (fixed_t){ 1 << (FIXED_WIDTH - 1) };
-    fixed_t t = (fixed_t){ a.val >> 1 };
+    // 0.5
+    const fixed_t div_2 = (fixed_t){1 << (FIXED_WIDTH - 1)};
+    fixed_t t = (fixed_t){a.val >> 1};
     for (i = 0; i < 5; i++)
     {
         t = fixed_add(t, fixed_div(a, t));

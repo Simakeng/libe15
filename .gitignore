@@ -1,2 +1,12 @@
-# ignore generated file
-build/**
+# ignore all file
+*.*
+*
+# allow source file
+!*/
+!*.mk
+!src/*.[ch]
+!test/*.[ch]
+!*.cc
+!*.gitignore
+!README.md
+!Makefile
