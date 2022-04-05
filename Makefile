@@ -18,8 +18,8 @@ include scripts/test.mk
 
 doc: $(DOCUMENT_TARGET)
 
-test: $(TEST_TARGET)
-	@echo "add code here to execute generated test"
+test: $(TEST_TARGET_LOGS)
+	@echo done!
 
 clean:
 	@rm -rf $(BUILD_DIR)

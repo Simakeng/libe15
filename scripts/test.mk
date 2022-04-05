@@ -54,6 +54,15 @@ $(BUILD_DIR)/test/% : $(TESTS_DIR)/%.c $(CHEAT_HEADER) $(OBJECTS_SRC)
 	@mkdir -p $(dir $@)
 	@$(CC) $(CFLAGS) -o $@ $< $(OBJECTS_SRC)
 
+# Execute tests:
+$(BUILD_DIR)/%.log: $(BUILD_DIR)/%
+	@echo ""
+	@echo "\033[34mTEST  $(@:%.log=%)\033[0m"
+	@echo "Report:"
+	@./$(@:%.log=%)
+	@echo "end"
+
+
 TEST_TARGET := $(addprefix $(BUILD_DIR)/,$(SELECTED_TEST_SUITS:%.c=%))
 
-OBJS-y += $(addprefix $(BUILD_DIR)/test/,$(obj-test))
+TEST_TARGET_LOGS := $(TEST_TARGET:%=%.log)
