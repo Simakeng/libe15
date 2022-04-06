@@ -18,6 +18,9 @@ include scripts/test.mk
 
 doc: $(DOCUMENT_TARGET)
 
+build: $(TEST_TARGET)
+	@echo done!
+
 test: $(TEST_TARGET_LOGS)
 	@echo done!
 

@@ -12,7 +12,7 @@
  @defgroup libe15-fpa libe15-fpa
     see libe15-fpa.h
 */
-
+#include <stdio.h>
 #include <stdint.h>
 
 /******************************************
@@ -72,11 +72,17 @@ static inline fixed_t fixed_sub(fixed_t a, fixed_t b)
  */
 static inline fixed_t fixed_mul(fixed_t a, fixed_t b)
 {
-    fixed_value_t a_hi, a_lo, temp;
+    fixed_value_t a_hi,a_lo,b_hi,b_lo;
     a_hi = a.val >> FIXED_WIDTH;
     a_lo = a.val & ((1 << FIXED_WIDTH) - 1);
-    temp = a_hi * b.val + ((a_lo * b.val) >> FIXED_WIDTH);
-    return (fixed_t){temp};
+    b_hi = b.val >> FIXED_WIDTH;
+    b_lo = b.val & ((1 << FIXED_WIDTH) - 1);
+    fixed_value_t res_hi = a_hi * b_hi;
+    fixed_value_t res_lo = a_lo * b_lo;
+    fixed_value_t res_mid = a_hi * b_lo + a_lo * b_hi;
+    res_hi <<= FIXED_WIDTH;
+    res_lo >>= FIXED_WIDTH;
+    return (fixed_t){res_hi + res_lo + res_mid};
 }
 
 /**

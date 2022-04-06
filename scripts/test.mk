@@ -35,6 +35,8 @@ INC_DIRS += $(WORKING_DIR)
 
 CFLAGS += $(addprefix -I,$(INC_DIRS))
 
+CFLAGS := -g $(CFLAGS)
+
 # Compilation patterns
 $(BUILD_DIR)/%.o: %.c
 	@echo "+ CC    $<"
