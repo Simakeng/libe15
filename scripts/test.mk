@@ -21,7 +21,7 @@ endif
 $(CHEAT_HEADER):
 	@echo "+ DL    $@"
 	@mkdir -p $(dir $@)
-	@curl https://raw.githubusercontent.com/Tuplanolla/cheat/master/cheat.h 1>$(BUILD_DIR)/cheat.h 2>/dev/null
+	@curl https://raw.githubusercontent.com/Tuplanolla/cheat/master/cheat.h 1>$(CHEAT_HEADER) 2>/dev/null
 
 # library source files
 include scripts/source.mk
@@ -38,33 +38,34 @@ CFLAGS += $(addprefix -I,$(INC_DIRS))
 CFLAGS := -g $(CFLAGS)
 
 # Compilation patterns
-$(BUILD_DIR)/%.o: %.c
+$(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.c
 	@echo "+ CC    $<"
+	@echo "+ CC    $@"
 	@mkdir -p $(dir $@)
 	@$(CC) $(CFLAGS) -c -o $@ $<
 	$(call call_fixdep, $(@:.o=.d), $@)
 
-$(BUILD_DIR)/%.o: %.cpp
+$(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.cpp
 	@echo "+ CCX   $<""
 	@mkdir -p $(dir $@)
 	@$(CXX) $(CFLAGS) $(CXXFLAGS) -c -o $@ $<
 	$(call call_fixdep, $(@:.o=.d), $@)
 
 # Generate test-suits
-$(BUILD_DIR)/test/% : $(TESTS_DIR)/%.c $(CHEAT_HEADER) $(OBJECTS_SRC)
+$(BUILD_DIR)/test/test.%: $(CHEAT_HEADER) $(TESTS_DIR)/test.%.c $(COMPILED_OBJECTS)
 	@echo "+ LD    $@"
 	@mkdir -p $(dir $@)
-	@$(CC) $(CFLAGS) -o $@ $< $(OBJECTS_SRC)
+	@$(CC) $(CFLAGS) -o $@ $^
 
 # Execute tests:
-$(BUILD_DIR)/%.log: $(BUILD_DIR)/%
+$(BUILD_DIR)/$(EXECUTION_LOG_DIR)/%.log: $(BUILD_DIR)/test/%
 	@echo ""
 	@echo "\033[34mTEST  $(@:%.log=%)\033[0m"
 	@echo "Report:"
-	@./$(@:%.log=%)
+	@./$<
 	@echo "end"
 
-
+# test target file path
 TEST_TARGET := $(addprefix $(BUILD_DIR)/,$(SELECTED_TEST_SUITS:%.c=%))
 
-TEST_TARGET_LOGS := $(TEST_TARGET:%=%.log)
+TEST_TARGET_LOGS := $(TEST_TARGET:$(BUILD_DIR)/test/%=$(BUILD_DIR)/$(EXECUTION_LOG_DIR)/%.log)

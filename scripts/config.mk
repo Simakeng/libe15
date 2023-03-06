@@ -2,6 +2,7 @@
 # configs and envs
 
 BUILD_DIR := build
+EXECUTION_LOG_DIR := exec_logs
 SOURCE_DIR := src
 TESTS_DIR := test
 WORKING_DIR := $(abspath $(shell pwd))

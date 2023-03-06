@@ -23,7 +23,6 @@
  * fixed point value type, should be the same as cpu's int type
  */
 #define fixed_value_t int32_t
-
 /**
  * fixed point position change this as you need
  */
@@ -158,7 +157,7 @@ inline float fixed_to_float(fixed_t a)
  */
 inline fixed_t fixed_from_float(float val)
 {
-    return (fixed_t){0};
+    
 }
 
 /**

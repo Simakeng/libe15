@@ -1,17 +1,6 @@
 #include "libe15-pid.h"
 
-typedef struct
-{
-    fixed_t kp;
-    fixed_t ki;
-    fixed_t kd;
-    fixed_t error;
-    fixed_t error_i;
-    fixed_t error_d;
-    fixed_t output;
 
-    pid_output_state_update_callback_t callback;
-} pid_state_t;
 
 void pid_init_controller(fixed_t kp, fixed_t ki, fixed_t kd, pid_state_t *pstate)
 {

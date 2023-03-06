@@ -10,11 +10,11 @@
 
 #include <libe15-fpa.h>
 
-struct pid_state_t;
+struct __tag_pid_state_t;
 
-typedef void (*pid_output_state_update_callback_t)(pid_state_t *, fixed_t);
+typedef void (*pid_update_callback_t)(struct __tag_pid_state_t *, fixed_t);
 
-typedef struct
+typedef struct __tag_pid_state_t
 {
     fixed_t kp;
     fixed_t ki;
@@ -24,8 +24,11 @@ typedef struct
     fixed_t error_d;
     fixed_t output;
 
-    pid_output_state_update_callback_t callback;
+    pid_update_callback_t callback;
 } pid_state_t;
+
+
+
 
 /**
  * @brief Initialize a PID controler with following
@@ -107,7 +110,7 @@ void pid_reset_controller(pid_state_t *pstate);
  * @param callback new callback
  */
 void pid_set_controller_callback(pid_state_t *pstate,
-                                 pid_output_state_update_callback_t callback);
+                                 pid_update_callback_t callback);
 
 /**
  * @brief remove callbask from a controller.
