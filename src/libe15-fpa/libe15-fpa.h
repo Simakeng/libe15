@@ -23,6 +23,7 @@
  * fixed point value type, should be the same as cpu's int type
  */
 #define fixed_value_t int32_t
+#define fixed_uvalue_t uint32_t
 /**
  * fixed point position change this as you need
  */
@@ -76,9 +77,9 @@ static inline fixed_t fixed_mul(fixed_t a, fixed_t b)
     a_lo = a.val & ((1 << FIXED_WIDTH) - 1);
     b_hi = b.val >> FIXED_WIDTH;
     b_lo = b.val & ((1 << FIXED_WIDTH) - 1);
-    fixed_value_t res_hi = a_hi * b_hi;
-    fixed_value_t res_lo = a_lo * b_lo;
-    fixed_value_t res_mid = a_hi * b_lo + a_lo * b_hi;
+    fixed_uvalue_t res_hi = a_hi * b_hi;
+    fixed_uvalue_t res_lo = a_lo * b_lo;
+    fixed_uvalue_t res_mid = a_hi * b_lo + a_lo * b_hi;
     res_hi <<= FIXED_WIDTH;
     res_lo >>= FIXED_WIDTH;
     return (fixed_t){res_hi + res_lo + res_mid};

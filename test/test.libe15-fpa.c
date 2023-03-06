@@ -29,16 +29,14 @@ CHEAT_TEST(fixed_t_add,
     }
 )
 
-#define RAND_TEST_VAL (((rand() % 16) << FIXED_WIDTH) | (rand() % ((1 << FIXED_WIDTH) - 1)))
+#define RAND_TEST_VAL (((rand() % 16) > 8 ? 1 : -1) * (((rand() % 16) << FIXED_WIDTH) | (rand() % ((1 << FIXED_WIDTH) - 1))))
 
 CHEAT_TEST(fixed_t_mul,
     srand(time(NULL));
-    uint32_t test_cnt = 1;
+    uint32_t test_cnt = 1 << 16;
     for(uint32_t i = 0; i < test_cnt; i++){
-        // int32_t r1 = RAND_TEST_VAL;
-        // int32_t r2 = RAND_TEST_VAL;
-        int32_t r1 = 0x000DC861;
-        int32_t r2 = 0x0006AB11;
+        int32_t r1 = RAND_TEST_VAL;
+        int32_t r2 = RAND_TEST_VAL;
         int64_t t1 = r1,t2 = r2;
         int64_t t3 = (t1 * t2) >> FIXED_WIDTH; 
         int32_t r3 = (uint32_t)(t3 & 0x00000000FFFFFFFFU);
