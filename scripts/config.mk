@@ -12,3 +12,6 @@ DOCUMENT_TARGET := $(DOCUMENT_DIR)/index.html
 
 CC := gcc
 CXX := g++
+
+SHELL := sh
+

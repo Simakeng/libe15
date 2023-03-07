@@ -17,11 +17,20 @@ ifeq ("$(SELECTED_TEST_SUITS)", "")
 $(error "Target '$(TARGET)' is not found!")
 endif
 
+
+
+.PHONY : cheat_header_file_check
+
+cheat_header_file_check: 
+	@$(SHELL) -c 'if [ ! -f $(CHEAT_HEADER) ]; then exit 0; fi; cheat_state=$$(stat -L -c %s $(CHEAT_HEADER)); if [ $$cheat_state -le 100 ]; then rm $(CHEAT_HEADER); echo "Invalid cheat.h header! Removed."; fi'
+
+
 # cheat testing framework
-$(CHEAT_HEADER):
+$(CHEAT_HEADER): cheat_header_file_check
 	@echo "+ DL    $@"
 	@mkdir -p $(dir $@)
-	@curl https://raw.githubusercontent.com/Tuplanolla/cheat/master/cheat.h 1>$(CHEAT_HEADER) 2>/dev/null
+	@$(SHELL) -c 'curl https://raw.githubusercontent_fail_test.com/Tuplanolla/cheat/master/cheat.h 1>$(CHEAT_HEADER) 2>/dev/null; if [ 0 -ne $$? ]; then echo "Download cheat.h Failed!"; rm $(CHEAT_HEADER); exit 1; fi'
+
 
 # library source files
 include scripts/source.mk
@@ -52,7 +61,7 @@ $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.cpp
 	$(call call_fixdep, $(@:.o=.d), $@)
 
 # Generate test-suits
-$(BUILD_DIR)/test/test.%: $(CHEAT_HEADER) $(TESTS_DIR)/test.%.c $(COMPILED_OBJECTS)
+$(BUILD_DIR)/test/test.%: header_file_check $(TESTS_DIR)/test.%.c $(COMPILED_OBJECTS)
 	@echo "+ LD    $@"
 	@mkdir -p $(dir $@)
 	@$(CC) $(CFLAGS) -o $@ $^
