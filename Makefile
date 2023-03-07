@@ -10,6 +10,9 @@ include scripts/config.mk
 # Rules for search target
 include scripts/source.mk
 
+# Rules for tool and utilities
+include scripts/tools.mk
+
 # Rules for build documentation
 include scripts/doc.mk
 

@@ -27,10 +27,8 @@ cheat_header_file_check:
 
 # cheat testing framework
 $(CHEAT_HEADER): cheat_header_file_check
-	@echo "+ DL    $@"
 	@mkdir -p $(dir $@)
-	@$(SHELL) -c 'curl https://raw.githubusercontent_fail_test.com/Tuplanolla/cheat/master/cheat.h 1>$(CHEAT_HEADER) 2>/dev/null; if [ 0 -ne $$? ]; then echo "Download cheat.h Failed!"; rm $(CHEAT_HEADER); exit 1; fi'
-
+	@$(SHELL) -c 'if [ -f $(CHEAT_HEADER) ]; then exit 0; fi; echo "+ DL    $@"; curl https://raw.githubusercontent.com/Tuplanolla/cheat/master/cheat.h 1>$(CHEAT_HEADER) 2>/dev/null; if [ 0 -ne $$? ]; then echo "Download cheat.h Failed!"; rm $(CHEAT_HEADER); exit 1; fi'
 
 # library source files
 include scripts/source.mk
@@ -47,24 +45,24 @@ CFLAGS += $(addprefix -I,$(INC_DIRS))
 CFLAGS := -g $(CFLAGS)
 
 # Compilation patterns
-$(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.c
+$(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.c $(AUTO_DEP)
 	@echo "+ CC    $<"
-	@echo "+ CC    $@"
 	@mkdir -p $(dir $@)
-	@$(CC) $(CFLAGS) -c -o $@ $<
-	$(call call_fixdep, $(@:.o=.d), $@)
+	@$(CC) $(CFLAGS) -c -o -MMD $@ $<
+	$(call call_fixdep,$(@:%=%.d),$@,$(CFLAGS))
 
-$(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.cpp
+$(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.cpp $(AUTO_DEP)
 	@echo "+ CCX   $<""
 	@mkdir -p $(dir $@)
-	@$(CXX) $(CFLAGS) $(CXXFLAGS) -c -o $@ $<
-	$(call call_fixdep, $(@:.o=.d), $@)
+	@$(CXX) $(CFLAGS) $(CXXFLAGS) -MMD -c -o $@ $<
+	$(call call_fixdep,$(@:%=%.d),$@,$(CFLAGS))
 
 # Generate test-suits
-$(BUILD_DIR)/test/test.%: header_file_check $(TESTS_DIR)/test.%.c $(COMPILED_OBJECTS)
+$(BUILD_DIR)/test/test.%: $(TESTS_DIR)/test.%.c $(CHEAT_HEADER) $(AUTO_DEP)
 	@echo "+ LD    $@"
 	@mkdir -p $(dir $@)
-	@$(CC) $(CFLAGS) -o $@ $^
+	@$(CC) $(CFLAGS) -MMD -MF $(@:%=%.d) -o $@ $<
+	$(call call_fixdep,$(@:%=%.d),$@,$(CFLAGS))
 
 # Execute tests:
 $(BUILD_DIR)/$(EXECUTION_LOG_DIR)/%.log: $(BUILD_DIR)/test/%
