@@ -3,6 +3,10 @@
 
 AUTO_DEP := $(BUILD_DIR)/tools/autodep
 
+DENPENDENCIES = $(wildcard *.d)
+
+-include $(DENPENDENCIES)
+
 $(AUTO_DEP) : $(TOOLS_SRC_DIR)/autodep/autodep.c
 	@echo "+ CC    $<"
 	@mkdir -p $(dir $@)

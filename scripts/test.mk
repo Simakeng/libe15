@@ -1,3 +1,4 @@
+.SECONDEXPANSION:
 
 CHEAT_HEADER = $(BUILD_DIR)/cheat.h
 
@@ -16,8 +17,6 @@ endif
 ifeq ("$(SELECTED_TEST_SUITS)", "")
 $(error "Target '$(TARGET)' is not found!")
 endif
-
-
 
 .PHONY : cheat_header_file_check
 
@@ -48,20 +47,20 @@ CFLAGS := -g $(CFLAGS)
 $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.c $(AUTO_DEP)
 	@echo "+ CC    $<"
 	@mkdir -p $(dir $@)
-	@$(CC) $(CFLAGS) -c -o -MMD $@ $<
+	@$(CC) $(CFLAGS) -MMD -MF $(@:%=%.d) -c -o  $@ $<
 	$(call call_fixdep,$(@:%=%.d),$@,$(CFLAGS))
 
 $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.cpp $(AUTO_DEP)
 	@echo "+ CCX   $<""
 	@mkdir -p $(dir $@)
-	@$(CXX) $(CFLAGS) $(CXXFLAGS) -MMD -c -o $@ $<
+	@$(CXX) $(CFLAGS) $(CXXFLAGS) -MMD -MF $(@:%=%.d) -c -o $@ $<
 	$(call call_fixdep,$(@:%=%.d),$@,$(CFLAGS))
 
 # Generate test-suits
-$(BUILD_DIR)/test/test.%: $(TESTS_DIR)/test.%.c $(CHEAT_HEADER) $(AUTO_DEP)
+$(BUILD_DIR)/test/test.%: $(TESTS_DIR)/test.%.c build/$$*/$$*.o $(CHEAT_HEADER) $(AUTO_DEP) 
 	@echo "+ LD    $@"
 	@mkdir -p $(dir $@)
-	@$(CC) $(CFLAGS) -MMD -MF $(@:%=%.d) -o $@ $<
+	@$(CC) $(CFLAGS) -MMD -MF $(@:%=%.d) -o $@ $(filter %.c %.o %.s ,$^)
 	$(call call_fixdep,$(@:%=%.d),$@,$(CFLAGS))
 
 # Execute tests:

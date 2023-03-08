@@ -28,8 +28,6 @@ typedef struct __tag_pid_state_t
 } pid_state_t;
 
 
-
-
 /**
  * @brief Initialize a PID controler with following
  *        paramaters, with internal state set to 0.
