@@ -72,7 +72,7 @@ static inline fixed_t fixed_sub(fixed_t a, fixed_t b)
  */
 static inline fixed_t fixed_mul(fixed_t a, fixed_t b)
 {
-    fixed_value_t a_hi,a_lo,b_hi,b_lo;
+    fixed_value_t a_hi, a_lo, b_hi, b_lo;
     a_hi = a.val >> FIXED_WIDTH;
     a_lo = a.val & ((1 << FIXED_WIDTH) - 1);
     b_hi = b.val >> FIXED_WIDTH;
@@ -119,7 +119,7 @@ static inline fixed_t fixed_abs(fixed_t a)
  * @param b operand b
  * @return fixed_t max{a,b}
  */
-inline fixed_t fixed_max(fixed_t a, fixed_t b)
+static inline fixed_t fixed_max(fixed_t a, fixed_t b)
 {
     fixed_value_t diff = b.val - a.val;
     return (fixed_t){
@@ -135,7 +135,7 @@ inline fixed_t fixed_max(fixed_t a, fixed_t b)
  * @param b operand b
  * @return fixed_t min{a,b}
  */
-inline fixed_t fixed_min(fixed_t a, fixed_t b)
+static inline fixed_t fixed_min(fixed_t a, fixed_t b)
 {
     fixed_value_t diff = b.val - a.val;
     return (fixed_t){
@@ -147,7 +147,7 @@ inline fixed_t fixed_min(fixed_t a, fixed_t b)
  * @param a value to convert
  * @return float
  */
-inline float fixed_to_float(fixed_t a)
+static inline float fixed_to_float(fixed_t a)
 {
     return 0.0f;
 }
@@ -156,9 +156,9 @@ inline float fixed_to_float(fixed_t a)
  * @param val value to convert
  * @return fixed_t
  */
-inline fixed_t fixed_from_float(float val)
+static inline fixed_t fixed_from_float(float val)
 {
-    
+    return (fixed_t){ 0 };
 }
 
 /**
@@ -176,7 +176,7 @@ static inline fixed_t fixed_from_int(int32_t val)
  * @param str string contains data
  * @return fixed_t
  */
-inline fixed_t fixed_atof(const char *str)
+static inline fixed_t fixed_atof(const char *str)
 {
     return (fixed_t){0};
 }
@@ -187,7 +187,7 @@ inline fixed_t fixed_atof(const char *str)
  * @param str buffer to store string
  * @return int 0 if success, -1 if failed
  */
-inline int fixed_ftoa(fixed_t val, char *str)
+static inline int fixed_ftoa(fixed_t val, char *str)
 {
     return 0;
 }

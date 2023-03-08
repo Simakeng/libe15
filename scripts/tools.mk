@@ -14,6 +14,7 @@ $(AUTO_DEP) : $(TOOLS_SRC_DIR)/autodep/autodep.c
 
 define call_fixdep
 	@echo "x DEP   $(1)"
-	@$(AUTO_DEP) "$(1)" "$(2)" "$(3)"
+	@$(AUTO_DEP) "$(1)" "$(2)" unused > $(1).temp
+	@mv $(1).temp $(1)
 endef
 

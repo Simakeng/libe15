@@ -1,7 +1,6 @@
 .SECONDEXPANSION:
-
-CHEAT_HEADER = $(BUILD_DIR)/cheat.h
-
+CHEAT_HEADER := $(BUILD_DIR)/cheat.h
+CHEAT_URL := https://raw.githubusercontent.com/Tuplanolla/cheat/master/cheat.h
 TEST_SUITS = $(shell find test -name "*.c")
 
 TARGET ?= all
@@ -27,7 +26,7 @@ cheat_header_file_check:
 # cheat testing framework
 $(CHEAT_HEADER): cheat_header_file_check
 	@mkdir -p $(dir $@)
-	@$(SHELL) -c 'if [ -f $(CHEAT_HEADER) ]; then exit 0; fi; echo "+ DL    $@"; curl https://raw.githubusercontent.com/Tuplanolla/cheat/master/cheat.h 1>$(CHEAT_HEADER) 2>/dev/null; if [ 0 -ne $$? ]; then echo "Download cheat.h Failed!"; rm $(CHEAT_HEADER); exit 1; fi'
+	@$(SHELL) -c 'if [ -f $(CHEAT_HEADER) ]; then exit 0; fi; echo "+ DL    $@"; curl $(CHEAT_URL) 1>$(CHEAT_HEADER) 2>/dev/null; if [ 0 -ne $$? ]; then echo "Download cheat.h Failed!"; exit 1; fi'
 
 # library source files
 include scripts/source.mk
@@ -60,6 +59,7 @@ $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.cpp $(AUTO_DEP)
 $(BUILD_DIR)/test/test.%: $(TESTS_DIR)/test.%.c build/$$*/$$*.o $(CHEAT_HEADER) $(AUTO_DEP) 
 	@echo "+ LD    $@"
 	@mkdir -p $(dir $@)
+	@echo "gcc $(CFLAGS) -MMD -MF $(@:%=%.d) -o $@ $(filter %.c %.o %.s ,$^)"
 	@$(CC) $(CFLAGS) -MMD -MF $(@:%=%.d) -o $@ $(filter %.c %.o %.s ,$^)
 	$(call call_fixdep,$(@:%=%.d),$@,$(CFLAGS))
 
