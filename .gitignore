@@ -7,6 +7,7 @@
 !*.mk
 !src/**/*.[ch]
 !test/**/*.[ch]
+!tools/**/*.[chSy]
 !*.cc
 !*.gitignore
 !README.md
