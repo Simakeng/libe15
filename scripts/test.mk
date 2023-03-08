@@ -59,7 +59,6 @@ $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.cpp $(AUTO_DEP)
 $(BUILD_DIR)/test/test.%: $(TESTS_DIR)/test.%.c build/$$*/$$*.o $(CHEAT_HEADER) $(AUTO_DEP) 
 	@echo "+ LD    $@"
 	@mkdir -p $(dir $@)
-	@echo "gcc $(CFLAGS) -MMD -MF $(@:%=%.d) -o $@ $(filter %.c %.o %.s ,$^)"
 	@$(CC) $(CFLAGS) -MMD -MF $(@:%=%.d) -o $@ $(filter %.c %.o %.s ,$^)
 	$(call call_fixdep,$(@:%=%.d),$@,$(CFLAGS))
 
