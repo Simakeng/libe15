@@ -59,16 +59,15 @@ $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.cpp $(AUTO_DEP)
 $(BUILD_DIR)/test/test.%: $(TESTS_DIR)/test.%.c build/$$*/$$*.o $(CHEAT_HEADER) $(AUTO_DEP) 
 	@echo "+ LD    $@"
 	@mkdir -p $(dir $@)
-	@$(CC) $(CFLAGS) -MMD -MF $(@:%=%.d) -o $@ $(filter %.c %.o %.s ,$^)
-	$(call call_fixdep,$(@:%=%.d),$@,$(CFLAGS))
+	@$(CC) $(CFLAGS) -MMD -MF $(@:%=%.d) -o $@ $(sort $(abspath $(filter %.c %.o %.s ,$^)))
+	$(call call_fixdep,$(@:%=%.d), $@,$(CFLAGS))
 
 # Execute tests:
 $(BUILD_DIR)/$(EXECUTION_LOG_DIR)/%.log: $(BUILD_DIR)/test/%
 	@echo ""
-	@echo "\033[34mTEST  $(@:%.log=%)\033[0m"
-	@echo "Report:"
+	@echo "TEST  $(@:%.log=%) START"
 	@./$<
-	@echo "end"
+	@echo "TEST  $(@:%.log=%) END"
 
 # test target file path
 TEST_TARGET := $(addprefix $(BUILD_DIR)/,$(SELECTED_TEST_SUITS:%.c=%))

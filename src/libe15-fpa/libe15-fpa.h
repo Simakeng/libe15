@@ -19,6 +19,8 @@
  *                Configs                 *
  ******************************************/
 
+#define FIEXD_VALUE_WIDTH 32
+
 /**
  * fixed point value type, should be the same as cpu's int type
  */
@@ -109,7 +111,7 @@ static inline fixed_t fixed_abs(fixed_t a)
 {
 
     fixed_value_t sign_bit = a.val >> (sizeof(fixed_value_t) * 8 - 1);
-    return (fixed_t){(a.val + sign_bit) ^ a.val};
+    return (fixed_t){(a.val + sign_bit) ^ sign_bit};
 }
 
 /**
@@ -123,8 +125,7 @@ static inline fixed_t fixed_max(fixed_t a, fixed_t b)
 {
     fixed_value_t diff = b.val - a.val;
     return (fixed_t){
-        b.val - (diff & (diff >> (sizeof(fixed_value_t) * 8 - 1)))
-
+        b.val - (diff & (diff >> (sizeof(fixed_value_t) * 8 - 1))) 
     };
 }
 
@@ -156,9 +157,42 @@ static inline float fixed_to_float(fixed_t a)
  * @param val value to convert
  * @return fixed_t
  */
-static inline fixed_t fixed_from_float(float val)
+static inline fixed_t fixed_from_float(const float val)
 {
-    return (fixed_t){ 0 };
+    fixed_uvalue_t fref = *(const fixed_uvalue_t *)&val;
+
+    fixed_uvalue_t sign_bit = fref & (((fixed_uvalue_t)1) << (FIEXD_VALUE_WIDTH - 1));
+
+    fixed_uvalue_t exp_value = fref & ((fixed_uvalue_t)0xFF) << (FIEXD_VALUE_WIDTH - 9);
+
+    fixed_value_t fixed_val = fref ^ (sign_bit | exp_value);
+    fixed_val |= (((fixed_uvalue_t)1) << (FIEXD_VALUE_WIDTH - 9));
+
+    sign_bit >>= (FIEXD_VALUE_WIDTH - 1);
+
+    exp_value >>= (FIEXD_VALUE_WIDTH - 9);
+    exp_value -= 127;
+
+    int32_t move_off = 23 - exp_value - 16;
+
+    // is negative float
+    if (sign_bit)
+        fixed_val = -fixed_val;
+
+    if (move_off > 0)
+        // move to left
+        fixed_val >>= move_off;
+    else
+    {
+        // move to right
+        move_off = -move_off;
+        if (move_off >= 7)
+            fixed_val = 0x7FFFFFFF;
+        else
+            fixed_val <<= move_off;
+    }
+
+    return (fixed_t){fixed_val};
 }
 
 /**

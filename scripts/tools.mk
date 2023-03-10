@@ -3,7 +3,7 @@
 
 AUTO_DEP := $(BUILD_DIR)/tools/autodep
 
-DENPENDENCIES = $(wildcard *.d)
+DENPENDENCIES := $(shell find . -name '*.d')
 
 -include $(DENPENDENCIES)
 

@@ -191,12 +191,12 @@ int main(int argc, char *argv[])
     depfile_content = load_depfile(depfile);
     parse_dependencies(depfile_content, target);
 
-    printf("%s : \\\n", target);
+    printf("%s : ", target);
     for (int i = 0; i < HASHSZ; i++)
     {
         if (hashtab[i] != NULL)
         {
-            printf("    %s \\ \n", hashtab[i]->name);
+            printf("\\\n    %s ", hashtab[i]->name);
         }
     }
 
