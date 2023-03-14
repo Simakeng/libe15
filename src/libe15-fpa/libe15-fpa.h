@@ -138,6 +138,38 @@ static inline fixed_t fixed_max(fixed_t a, fixed_t b)
 }
 
 /**
+ * @brief numric compare greater than `>`
+ * @param a operand a
+ * @param b operand b
+ * @return if a > b return 1; else return 0;
+ */
+static inline fixed_uvalue_t fixed_ge(fixed_t a, fixed_t b) { return a.val > b.val; };
+
+/**
+ * @brief numric compare less than `<`
+ * @param a operand a
+ * @param b operand b
+ * @return if a < b return 1; else return 0;
+ */
+static inline fixed_uvalue_t fixed_le(fixed_t a, fixed_t b) { return a.val < b.val; };
+
+/**
+ * @brief numric compare greater or equal `>=`
+ * @param a operand a
+ * @param b operand b
+ * @return if a >= b return 1; else return 0;
+ */
+static inline fixed_uvalue_t fixed_geq(fixed_t a, fixed_t b) { return a.val >= b.val; };
+
+/**
+ * @brief numric compare greater `<=`
+ * @param a operand a
+ * @param b operand b
+ * @return if a <= b return 1; else return 0;
+ */
+static inline fixed_uvalue_t fixed_leq(fixed_t a, fixed_t b) { return a.val <= b.val; };
+
+/**
  * @brief get the smaller one's value of two fixed point value
  *
  * @param a operand a
@@ -275,12 +307,11 @@ static inline fixed_t fixed_atof(const char *str)
             str++;
             if (frac_depth > 6)
             {
-                if(isdigit(*str))
-                    if(*str > '4')
+                if (isdigit(*str))
+                    if (*str > '4')
                         frac_val += 1;
                 break;
             }
-
         }
     }
 
@@ -312,7 +343,7 @@ static inline fixed_t fixed_atof(const char *str)
         else if (frac_depth != 0)
         {
             frac_val /= 5;
-            frac_depth--; 
+            frac_depth--;
         }
     }
 
