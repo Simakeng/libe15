@@ -314,6 +314,36 @@ static inline fixed_t fixed_atof(const char *str)
  */
 static inline int fixed_ftoa(fixed_t val, char *str)
 {
+    fixed_t abs_val = fixed_abs(val);
+    fixed_value_t interger = abs_val.val >> FIXED_WIDTH;
+    if (val.val < 0)
+        *str++ = '-';
+    int char_cnt = sprintf(str, "%d", interger);
+    str += char_cnt;
+    *str++ = '.';
+    fixed_value_t fraction = abs_val.val & ((1 << FIXED_WIDTH) - 1);
+
+    /*
+     * equivalent to
+     *  `reminder = reminder * 1000000 % 65536`,
+     * but the qeuation below will not overflow 32bit interger.
+     */
+    fixed_value_t reminder = (fraction * 1000) % 65536;
+    reminder = (reminder * 1000) % 65536;
+
+    /*
+     * equivalent to
+     *  `fraction = fraction * 1000000 / 65536`,
+     * but the qeuation below will not overflow 32bit interger.
+     */
+    fraction = fraction * 15625 / 1024;
+
+    // * use reminder to round up
+    if(reminder >= 32768)
+        fraction += 1;
+
+    char_cnt = sprintf(str, "%06d", fraction);
+
     return 0;
 }
 
