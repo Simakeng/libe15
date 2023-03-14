@@ -18,9 +18,6 @@
 
 /**
  * @brief Initialize SysTick Timer
- * 
- * @param sys_clk_freq System Clock Frequency(AHB input clk)
- * @param clock_source Select Clock Source
  */
 void systick_init(void);
 

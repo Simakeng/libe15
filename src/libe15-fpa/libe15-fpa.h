@@ -14,6 +14,7 @@
 */
 #include <stdio.h>
 #include <stdint.h>
+#include <ctype.h>
 
 /******************************************
  *                Configs                 *
@@ -31,18 +32,26 @@
  */
 #define FIXED_WIDTH 16
 
-/// 0
-#define FPA_ZERO ((fixed_value_t)0)
-
-/// π
-#define FPA_PI ((fixed_value_t)(3.1415926535897932384626433832795l * (1 << FIXED_WIDTH)))
-
 /// fixed point value type
 typedef struct __tag_fixed_t
 {
     fixed_value_t val;
 } fixed_t;
 
+/// 0
+#define FPA_ZERO ((fixed_t){(fixed_value_t)0})
+
+/// π
+#define FPA_PI ((fixed_t){(fixed_value_t)(3.1415926535897932384626433832795l * (1 << FIXED_WIDTH))})
+
+/// INF VALUE(MAX) = 32767.99998
+#define FIXED_MAX_INF ((fixed_t){(fixed_value_t)0x7FFFFFFF})
+
+/// -INF VALUE(MIN) = 32767.99998
+#define FIXED_MIN_NINF ((fixed_t){(fixed_value_t)0x80000000})
+
+/// epsilon = 0.000015
+#define FIXED_EPS ((fixed_t){(fixed_value_t)0x00000001})
 /**
  * @brief add two fixed point value
  *
@@ -125,8 +134,7 @@ static inline fixed_t fixed_max(fixed_t a, fixed_t b)
 {
     fixed_value_t diff = b.val - a.val;
     return (fixed_t){
-        b.val - (diff & (diff >> (sizeof(fixed_value_t) * 8 - 1))) 
-    };
+        b.val - (diff & (diff >> (sizeof(fixed_value_t) * 8 - 1)))};
 }
 
 /**
@@ -212,7 +220,90 @@ static inline fixed_t fixed_from_int(int32_t val)
  */
 static inline fixed_t fixed_atof(const char *str)
 {
-    return (fixed_t){0};
+    int32_t i_val = 0;
+    int32_t sign = 0;
+    uint32_t frac_val = 0;
+    uint32_t frac_depth = 0;
+    int32_t fixed_value;
+
+    while (isspace(*str))
+        *str++;
+
+    if (*str == '-')
+    {
+        sign = -1;
+        str++;
+    }
+
+    if (*str == '+')
+        str++;
+
+    while (isdigit(*str))
+    {
+        i_val *= 10;
+        i_val += *str - '0';
+        if (i_val > 0x7FFFu)
+            if (sign == -1)
+                return FIXED_MIN_NINF;
+            else
+                return FIXED_MAX_INF;
+        str++;
+    }
+
+    if (*str == '.')
+    {
+        str++;
+
+        while (isdigit(*str))
+        {
+            frac_val *= 10;
+            frac_val += *str - '0';
+            frac_depth++;
+
+            if (frac_depth > 6)
+                break;
+
+            str++;
+        }
+    }
+
+    fixed_value = i_val << FIXED_WIDTH;
+
+    uint32_t move_left = FIXED_WIDTH;
+    while (frac_depth || move_left)
+    {
+        if (frac_depth != 0)
+        {
+            if (move_left >= 4)
+            {
+                frac_val <<= 3;
+                move_left -= 4;
+                frac_val /= 5;
+                frac_depth--;
+            }
+            else if (move_left != 0)
+            {
+                frac_val <<= move_left;
+                move_left = 0;
+            }
+            else
+            {
+                frac_val /= 10;
+                frac_depth--;
+            }
+        }
+        else if (move_left != 0)
+        {
+            frac_val <<= move_left;
+            move_left = 0;
+        }
+    }
+
+    fixed_value += frac_val;
+    if (sign)
+        return (fixed_t){-fixed_value};
+    else
+        return (fixed_t){fixed_value};
 }
 
 /**

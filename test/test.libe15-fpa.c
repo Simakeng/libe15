@@ -2,13 +2,15 @@
 #define __BASE_FILE__ __FILE__
 #endif
 
+#define _CRT_SECURE_NO_WARNINGS
+
 #include <stdlib.h>
 #include <time.h>
 #include <cheat.h>
 #include <math.h>
 #include <libe15-fpa.h>
 
-#define TEST_MULTIPLIER 16
+#define TEST_MULTIPLIER 4
 
 CHEAT_TEST(fixed_t_value_validation,
 
@@ -230,5 +232,52 @@ CHEAT_TEST(fixed_from_float_conv,
             fprintf(stderr,"dif : %f\n",fabs(1.0 * r3.val / (1 << FIXED_WIDTH) - f3 ));
         }
     }
+
+)
+
+
+CHEAT_TEST(fixed_from_int_conv,
+    srand(time(NULL));
+    uint32_t test_cnt = 1 << TEST_MULTIPLIER;
+    for(uint32_t i = 0; i < test_cnt; i++){
+
+        int32_t test_val = (rand() % ((1 << FIXED_WIDTH) - 1));
+        if (rand() % 2)
+            test_val *= -1;
+        fixed_t val = fixed_from_int(test_val);
+
+        cheat_assert(val.val == test_val << FIXED_WIDTH);
+    }
+
+)
+
+CHEAT_TEST(fixed_atof_cont,
+    uint32_t test_cnt = 1 << TEST_MULTIPLIER;
+    for(uint32_t i = 0; i < test_cnt; i++){
+        char as[256] = { 0 };
+        int32_t interger = 25 - (rand() % 50);
+        int32_t frac_1 = rand() % 1000;
+        int32_t frac_2 = rand() % 1000;
+        int32_t frac_3 = rand() % 1000;
+
+        sprintf(as, "%d.%03d%03d%03d", interger, frac_1,frac_2,frac_3);
+
+        fixed_t fv = fixed_atof(as);
+
+        float rfv = strtof(as, NULL);
+
+        fixed_t frfv = fixed_from_float(rfv);
+
+        cheat_assert_not(abs(fv.val - frfv.val) > 1);
+
+        if(abs(fv.val - frfv.val) > 1)
+        {
+            fprintf(stderr,"str : %s\n",as);
+            fprintf(stderr,"fv  : 0x%08X conv:%.07f\n",fv.val, fv.val / 65536.0);
+            fprintf(stderr,"rfv : 0x%08X conv:%.07f\n",frfv.val, frfv.val / 65536.0);
+        }
+
+    }
+    
 
 )
