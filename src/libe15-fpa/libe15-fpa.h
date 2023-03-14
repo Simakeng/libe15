@@ -213,6 +213,18 @@ static inline fixed_t fixed_from_int(int32_t val)
     return (fixed_t){val << FIXED_WIDTH};
 }
 
+static inline uint32_t __u32_bit_width(uint32_t v)
+{
+    uint32_t bit_width = 32;
+    while (bit_width != 0)
+    {
+        if ((1 << (bit_width - 1)) & v)
+            return bit_width;
+        bit_width--;
+    }
+    return bit_width;
+}
+
 /**
  * @brief parse string to get fixed point value
  * @param str string contains data
@@ -260,42 +272,47 @@ static inline fixed_t fixed_atof(const char *str)
             frac_val += *str - '0';
             frac_depth++;
 
-            if (frac_depth > 6)
-                break;
-
             str++;
+            if (frac_depth > 6)
+            {
+                if(isdigit(*str))
+                    if(*str > '4')
+                        frac_val += 1;
+                break;
+            }
+
         }
     }
 
     fixed_value = i_val << FIXED_WIDTH;
 
-    uint32_t move_left = FIXED_WIDTH;
+    uint32_t move_left = FIXED_WIDTH - frac_depth;
     while (frac_depth || move_left)
     {
-        if (frac_depth != 0)
+        if (move_left != 0)
         {
-            if (move_left >= 4)
-            {
-                frac_val <<= 3;
-                move_left -= 4;
-                frac_val /= 5;
-                frac_depth--;
-            }
-            else if (move_left != 0)
+            uint32_t can_move = 32 - __u32_bit_width(frac_val);
+            if (can_move > move_left)
             {
                 frac_val <<= move_left;
                 move_left = 0;
             }
             else
             {
-                frac_val /= 10;
+                frac_val <<= can_move;
+                move_left -= can_move;
+            }
+
+            if (frac_depth != 0)
+            {
+                frac_val /= 5;
                 frac_depth--;
             }
         }
-        else if (move_left != 0)
+        else if (frac_depth != 0)
         {
-            frac_val <<= move_left;
-            move_left = 0;
+            frac_val /= 5;
+            frac_depth--; 
         }
     }
 
@@ -339,7 +356,7 @@ static inline int fixed_ftoa(fixed_t val, char *str)
     fraction = fraction * 15625 / 1024;
 
     // * use reminder to round up
-    if(reminder >= 32768)
+    if (reminder >= 32768)
         fraction += 1;
 
     char_cnt = sprintf(str, "%06d", fraction);

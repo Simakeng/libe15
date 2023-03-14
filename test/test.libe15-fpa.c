@@ -10,7 +10,7 @@
 #include <math.h>
 #include <libe15-fpa.h>
 
-#define TEST_MULTIPLIER 4
+#define TEST_MULTIPLIER 16
 
 CHEAT_TEST(fixed_t_value_validation,
 
@@ -264,7 +264,7 @@ CHEAT_TEST(fixed_atof_cont,
 
         fixed_t fv = fixed_atof(as);
 
-        float rfv = strtof(as, NULL);
+        float rfv = strtod(as, NULL);
 
         fixed_t frfv = fixed_from_float(rfv);
 
@@ -273,11 +273,42 @@ CHEAT_TEST(fixed_atof_cont,
         if(abs(fv.val - frfv.val) > 1)
         {
             fprintf(stderr,"str : %s\n",as);
+            fprintf(stderr,"rfv : %f\n",rfv);
             fprintf(stderr,"fv  : 0x%08X conv:%.07f\n",fv.val, fv.val / 65536.0);
-            fprintf(stderr,"rfv : 0x%08X conv:%.07f\n",frfv.val, frfv.val / 65536.0);
+            fprintf(stderr,"frfv : 0x%08X conv:%.07f\n",frfv.val, frfv.val / 65536.0);
         }
 
     }
     
+
+)
+
+CHEAT_TEST(fixed_ftoa_cont,
+    uint32_t test_cnt = 1 << TEST_MULTIPLIER;
+    for(uint32_t i = 0; i < test_cnt; i++){
+        char as[256] = { 0 };
+
+        fixed_t fv = (fixed_t){RAND_TEST_VAL};
+        fixed_ftoa(fv, as);
+
+        float ffv = fv.val / 65536.0;
+
+        char fas[256] = { 0 };
+
+        sprintf(fas,"%.06f",ffv);
+
+        int a = strlen(as);
+        int b = strlen(fas);
+        as[a-1] = 0;
+        fas[b-1] = 0;
+
+        cheat_assert_not(strcmp(fas,as) != 0);
+        if(strcmp(fas,as) != 0)
+        {
+            fprintf(stderr,"fv  : 0x%08X\n",fv.val);
+            fprintf(stderr,"sfv : %s\n",as);
+            fprintf(stderr,"ffv : %s\n",fas);
+        }
+    }
 
 )
