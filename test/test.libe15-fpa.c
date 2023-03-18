@@ -209,6 +209,7 @@ CHEAT_TEST(fixed_from_float_conv,
     for(uint32_t i = 0; i < test_cnt; i++){
         float f1 = 1.0 * RAND_TEST_VAL / (1 << FIXED_WIDTH);
         float f2 = 1.0 * RAND_TEST_VAL / (1 << FIXED_WIDTH);
+        // float f2 = 0.0f;
 
         float f3 = f1 * f2;
 

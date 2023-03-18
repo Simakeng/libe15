@@ -203,7 +203,7 @@ static inline fixed_t fixed_from_float(const float val)
 
     fixed_uvalue_t sign_bit = fref & (((fixed_uvalue_t)1) << (FIEXD_VALUE_WIDTH - 1));
 
-    fixed_uvalue_t exp_value = fref & ((fixed_uvalue_t)0xFF) << (FIEXD_VALUE_WIDTH - 9);
+    fixed_value_t exp_value = fref & ((fixed_uvalue_t)0xFF) << (FIEXD_VALUE_WIDTH - 9);
 
     fixed_value_t fixed_val = fref ^ (sign_bit | exp_value);
     fixed_val |= (((fixed_uvalue_t)1) << (FIEXD_VALUE_WIDTH - 9));
@@ -214,14 +214,17 @@ static inline fixed_t fixed_from_float(const float val)
     exp_value -= 127;
 
     int32_t move_off = 23 - exp_value - 16;
-
     // is negative float
     if (sign_bit)
         fixed_val = -fixed_val;
 
     if (move_off > 0)
-        // move to left
-        fixed_val >>= move_off;
+    { // move to left
+        if (move_off >= 24)
+            fixed_val = 0;
+        else
+            fixed_val >>= move_off;
+    }
     else
     {
         // move to right
