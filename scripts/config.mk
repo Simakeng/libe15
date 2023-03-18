@@ -16,3 +16,5 @@ CXX := g++
 
 SHELL := sh
 
+CFLAGS :=
+LDLIBS := -lm

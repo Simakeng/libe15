@@ -46,20 +46,20 @@ CFLAGS := -g $(CFLAGS)
 $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.c $(AUTO_DEP)
 	@echo "+ CC    $<"
 	@mkdir -p $(dir $@)
-	@$(CC) $(CFLAGS) -MMD -MF $(@:%=%.d) -c -o  $@ $<
+	@$(CC) $(CFLAGS) -MMD -MF $(@:%=%.d) -c -o $@ $< $(LDLIBS)
 	$(call call_fixdep,$(@:%=%.d),$@,$(CFLAGS))
 
 $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.cpp $(AUTO_DEP)
 	@echo "+ CCX   $<""
 	@mkdir -p $(dir $@)
-	@$(CXX) $(CFLAGS) $(CXXFLAGS) -MMD -MF $(@:%=%.d) -c -o $@ $<
+	@$(CXX) $(CFLAGS) $(CXXFLAGS) -MMD -MF $(@:%=%.d) -c -o $@ $< $(LDLIBS)
 	$(call call_fixdep,$(@:%=%.d),$@,$(CFLAGS))
 
 # Generate test-suits
 $(BUILD_DIR)/test/test.%: $(TESTS_DIR)/test.%.c build/$$*/$$*.o $(CHEAT_HEADER) $(AUTO_DEP) 
 	@echo "+ LD    $@"
 	@mkdir -p $(dir $@)
-	@$(CC) $(CFLAGS) -MMD -MF $(@:%=%.d) -o $@ $(sort $(abspath $(filter %.c %.o %.s ,$^)))
+	@$(CC) $(CFLAGS) -MMD -MF $(@:%=%.d) -o $@ $(sort $(abspath $(filter %.c %.o %.s ,$^))) $(LDLIBS)
 	$(call call_fixdep,$(@:%=%.d), $@,$(CFLAGS))
 
 # Execute tests:

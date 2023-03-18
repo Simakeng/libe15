@@ -24,7 +24,7 @@ endef
 $(CORDIC) : $(TOOLS_SRC_DIR)/cordic/cordic.c
 	@echo "+ CC    $<"
 	@mkdir -p $(dir $@)
-	@$(CC) $(CFLAGS) -o $@ $<
+	@$(CC) $(CFLAGS) $< $(LDLIBS) -o $@
 
 $(CORDIC_HEADER) : $(CORDIC)
 	@echo "+ GEN   $@"
