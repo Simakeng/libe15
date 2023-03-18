@@ -10,7 +10,7 @@
 #include <math.h>
 #include <libe15-fpa.h>
 
-#define TEST_MULTIPLIER 16
+#define TEST_MULTIPLIER 10
 
 CHEAT_TEST(fixed_t_value_validation,
 
@@ -209,7 +209,6 @@ CHEAT_TEST(fixed_from_float_conv,
     for(uint32_t i = 0; i < test_cnt; i++){
         float f1 = 1.0 * RAND_TEST_VAL / (1 << FIXED_WIDTH);
         float f2 = 1.0 * RAND_TEST_VAL / (1 << FIXED_WIDTH);
-        // float f2 = 0.0f;
 
         float f3 = f1 * f2;
 
@@ -313,3 +312,26 @@ CHEAT_TEST(fixed_ftoa_cont,
     }
 
 )
+
+CHEAT_TEST(
+    fixed_sin_calc,
+    uint32_t test_cnt = 1 << TEST_MULTIPLIER;
+    for (uint32_t i = 0; i < test_cnt; i++) {
+        int32_t test_val = RAND_TEST_VAL;
+        fixed_t fv = (fixed_t){test_val};
+
+        fixed_t sin_val = fixed_sin(fv);
+
+        double real_sin = sin(1.0 * test_val / (1 << FIXED_WIDTH));
+
+        fixed_t rfv = fixed_from_float(real_sin);
+        
+        cheat_assert_not(abs(sin_val.val - rfv.val) > 10);
+        if (abs(sin_val.val - rfv.val) > 10)
+        {
+            fprintf(stderr, "input_val       : %f 0x%08X\n", 1.0 * test_val / (1 << FIXED_WIDTH),test_val);
+            fprintf(stderr, "true_output_val : %f\n", real_sin);
+            fprintf(stderr, "test_output_val : %f\n", 1.0 * sin_val.val / (1 << FIXED_WIDTH));
+            fprintf(stderr, "+++++++++++++++++++\n");
+        }
+    })

@@ -8,6 +8,9 @@
  *
  */
 
+#ifndef LIBE15_FPA_H
+#define LIBE15_FPA_H __FILE__
+
 /**
  @defgroup libe15-fpa libe15-fpa
     see libe15-fpa.h
@@ -28,7 +31,7 @@
 #define fixed_value_t int32_t
 #define fixed_uvalue_t uint32_t
 /**
- * fixed point position change this as you need
+ * fixed point position
  */
 #define FIXED_WIDTH 16
 
@@ -39,10 +42,19 @@ typedef struct __tag_fixed_t
 } fixed_t;
 
 /// 0
-#define FPA_ZERO ((fixed_t){(fixed_value_t)0})
+#define FIXED_ZERO ((fixed_t){(fixed_value_t)0})
+
+/// 1
+#define FIXED_ONE ((fixed_t){(fixed_value_t)(1 << FIXED_WIDTH)})
 
 /// π
-#define FPA_PI ((fixed_t){(fixed_value_t)(3.1415926535897932384626433832795l * (1 << FIXED_WIDTH))})
+#define FIXED_PI ((fixed_t){(fixed_value_t)(3.1415926535897932384626433832795l * (1 << FIXED_WIDTH))})
+
+/// π / 2
+#define FIXED_PI_DIV2 ((fixed_t){(fixed_value_t)(3.1415926535897932384626433832795l * (1 << (FIXED_WIDTH - 1)))})
+
+/// 2π , aka τ
+#define FIXED_2PI ((fixed_t){(fixed_value_t)(3.1415926535897932384626433832795l * (2 << FIXED_WIDTH))})
 
 /// INF VALUE(MAX) = 32767.99998
 #define FIXED_MAX_INF ((fixed_t){(fixed_value_t)0x7FFFFFFF})
@@ -399,21 +411,51 @@ static inline int fixed_ftoa(fixed_t val, char *str)
 }
 
 /**
+ * @brief move fixed point value to left
+ *
+ * @param value the value to move
+ * @param bits the bits to move
+ * @return fixed_t
+ */
+static inline fixed_t fixed_move_left(fixed_t value, fixed_uvalue_t bits)
+{
+    return (fixed_t){value.val << bits};
+}
+
+/**
+ * @brief move fixed point value to right
+ *
+ * @param value the value to move
+ * @param bits the bits to move
+ * @return fixed_t
+ */
+static inline fixed_t fixed_move_right(fixed_t value, fixed_uvalue_t bits)
+{
+    return (fixed_t){value.val >> bits};
+}
+
+/**
  * @brief get the square root of a fixed point value
  *
  * @param a operand a
  * @return fixed_t sqrt(a)
  */
-static inline fixed_t fixed_sqrt(fixed_t a)
-{
-    int i = 0;
-    // 0.5
-    const fixed_t div_2 = (fixed_t){1 << (FIXED_WIDTH - 1)};
-    fixed_t t = (fixed_t){a.val >> 1};
-    for (i = 0; i < 5; i++)
-    {
-        t = fixed_add(t, fixed_div(a, t));
-        t = fixed_mul(t, div_2);
-    }
-    return t;
-}
+fixed_t fixed_sqrt(fixed_t a);
+
+/**
+ * @brief get the sine of a fixed point value
+ * @note this implmentation use CORDIC algorithm
+ * @param v operand v
+ * @return fixed_t sin(v)
+ */
+fixed_t fixed_sin(fixed_t v);
+
+/**
+ * @brief get the cosine of a fixed point value
+ * @note this implmentation use CORDIC algorithm
+ * @param v operand v
+ * @return fixed_t cos(v)
+ */
+fixed_t fixed_cos(fixed_t v);
+
+#endif // ! LIBE15_FPA_H

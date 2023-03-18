@@ -2,6 +2,9 @@
 # Tools and utilities
 
 AUTO_DEP := $(BUILD_DIR)/tools/autodep
+CORDIC := $(BUILD_DIR)/tools/cordic
+
+CORDIC_HEADER := $(BUILD_DIR)/cordic.h
 
 DENPENDENCIES := $(shell find . -name '*.d')
 
@@ -18,3 +21,12 @@ define call_fixdep
 	@mv $(1).temp $(1)
 endef
 
+$(CORDIC) : $(TOOLS_SRC_DIR)/cordic/cordic.c
+	@echo "+ CC    $<"
+	@mkdir -p $(dir $@)
+	@$(CC) $(CFLAGS) -o $@ $<
+
+$(CORDIC_HEADER) : $(CORDIC)
+	@echo "+ GEN   $@"
+	@mkdir -p $(dir $@)
+	@$(CORDIC) > $@
