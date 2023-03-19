@@ -38,6 +38,7 @@ INC_DIRS ?=
 INC_DIRS += $(abspath $(BUILD_DIR))
 INC_DIRS += $(WORKING_DIR)
 
+CFLAGS := -lm
 CFLAGS += $(addprefix -I,$(INC_DIRS))
 
 CFLAGS := -g $(CFLAGS)
