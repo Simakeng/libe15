@@ -10,7 +10,7 @@
 #include <math.h>
 #include <libe15-fpa.h>
 
-#define TEST_MULTIPLIER 10
+#define TEST_MULTIPLIER 16
 
 CHEAT_TEST(fixed_t_value_validation,
 
@@ -29,7 +29,7 @@ CHEAT_TEST(fixed_t_add,
         int32_t r2 = rand() % 1000;
         fixed_t val1 = fixed_from_int(r1);
         fixed_t val2 = fixed_from_int(r2);
-        fixed_t val3 = fixed_add(val1, val2); 
+        fixed_t val3 = fixed_add(val1, val2);
         cheat_assert(val3.val == (r1 + r2) << FIXED_WIDTH);
     }
 )
@@ -43,14 +43,14 @@ CHEAT_TEST(fixed_t_mul,
         int32_t r1 = RAND_TEST_VAL;
         int32_t r2 = RAND_TEST_VAL;
         int64_t t1 = r1,t2 = r2;
-        int64_t t3 = (t1 * t2) >> FIXED_WIDTH; 
+        int64_t t3 = (t1 * t2) >> FIXED_WIDTH;
         int32_t r3 = (uint32_t)(t3 & 0x00000000FFFFFFFFU);
         fixed_t val1, val2;
         val1.val = r1;
         val2.val = r2;
 
         fixed_t val3 = fixed_mul(val1, val2);
-        
+
         cheat_assert(val3.val == r3);
 
         if(val3.val != r3)
@@ -70,14 +70,14 @@ CHEAT_TEST(fixed_t_minus,
         int32_t r1 = RAND_TEST_VAL;
         int32_t r2 = RAND_TEST_VAL;
         int64_t t1 = r1,t2 = r2;
-        int64_t t3 = t1 - t2; 
+        int64_t t3 = t1 - t2;
         int32_t r3 = (uint32_t)(t3 & 0x00000000FFFFFFFFU);
         fixed_t val1, val2;
         val1.val = r1;
         val2.val = r2;
 
         fixed_t val3 = fixed_sub(val1, val2);
-        
+
         cheat_assert(val3.val == r3);
 
         if(val3.val != r3)
@@ -98,14 +98,14 @@ CHEAT_TEST(fixed_t_div,
         int32_t r1 = RAND_TEST_VAL;
         int32_t r2 = RAND_TEST_VAL;
         int64_t t1 = r1,t2 = r2;
-        int64_t t3 = (t1 << FIXED_WIDTH) / t2; 
+        int64_t t3 = (t1 << FIXED_WIDTH) / t2;
         int32_t r3 = (uint32_t)(t3 & 0x00000000FFFFFFFFU);
         fixed_t val1, val2;
         val1.val = r1;
         val2.val = r2;
 
         fixed_t val3 = fixed_div(val1, val2);
-        
+
         cheat_assert(val3.val == r3);
 
         if(val3.val != r3)
@@ -127,14 +127,14 @@ CHEAT_TEST(fixed_t_min,
         int32_t r1 = RAND_TEST_VAL;
         int32_t r2 = RAND_TEST_VAL;
         int64_t t1 = r1,t2 = r2;
-        int64_t t3 = r1 > r2 ? r2 : r1; 
+        int64_t t3 = r1 > r2 ? r2 : r1;
         int32_t r3 = (uint32_t)(t3 & 0x00000000FFFFFFFFU);
         fixed_t val1, val2;
         val1.val = r1;
         val2.val = r2;
 
         fixed_t val3 = fixed_min(val1, val2);
-        
+
         cheat_assert(val3.val == r3);
 
         if(val3.val != r3)
@@ -155,14 +155,14 @@ CHEAT_TEST(fixed_t_max,
         int32_t r1 = RAND_TEST_VAL;
         int32_t r2 = RAND_TEST_VAL;
         int64_t t1 = r1,t2 = r2;
-        int64_t t3 = r1 < r2 ? r2 : r1; 
+        int64_t t3 = r1 < r2 ? r2 : r1;
         int32_t r3 = (uint32_t)(t3 & 0x00000000FFFFFFFFU);
         fixed_t val1, val2;
         val1.val = r1;
         val2.val = r2;
 
         fixed_t val3 = fixed_max(val1, val2);
-        
+
         cheat_assert(val3.val == r3);
 
         if(val3.val != r3)
@@ -183,14 +183,14 @@ CHEAT_TEST(fixed_t_abs,
     for(uint32_t i = 0; i < test_cnt; i++){
         int32_t r1 = RAND_TEST_VAL;
 
-        int64_t t3 = r1 < 0 ? (0-r1) : (r1); 
+        int64_t t3 = r1 < 0 ? (0-r1) : (r1);
 
         int32_t r3 = (uint32_t)(t3 & 0x00000000FFFFFFFFU);
         fixed_t val1;
         val1.val = r1;
 
         fixed_t val3 = fixed_abs(val1);
-        
+
         cheat_assert(val3.val == r3);
 
         if(val3.val != r3)
@@ -279,7 +279,7 @@ CHEAT_TEST(fixed_atof_cont,
         }
 
     }
-    
+
 
 )
 
@@ -325,7 +325,7 @@ CHEAT_TEST(
         double real_sin = sin(1.0 * test_val / (1 << FIXED_WIDTH));
 
         fixed_t rfv = fixed_from_float(real_sin);
-        
+
         cheat_assert_not(abs(sin_val.val - rfv.val) > 10);
         if (abs(sin_val.val - rfv.val) > 10)
         {

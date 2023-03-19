@@ -41,7 +41,7 @@ void cordic_rotate(fixed_t deg, fixed_t *sin_out, fixed_t *cos_out)
     fixed_t y = FIXED_ZERO;
     fixed_t current_deg = FIXED_ZERO;
     int i = 0;
-    for (i = 0; i < 15; i++)
+    for (i = 0; i < 16; i++)
     {
         // const char *dir;
         fixed_t x_temp, y_temp;
@@ -60,13 +60,18 @@ void cordic_rotate(fixed_t deg, fixed_t *sin_out, fixed_t *cos_out)
             // dir = "B";
         }
         else
+        {
+            // fprintf(stderr, "exited at %d\n",i);
             goto cordic_output;
+        }
         x = x_temp;
         y = y_temp;
         // double len = ((x.val / 65536.) * (x.val / 65536.) + (y.val / 65536.) * (y.val / 65536.)) * (cordic_gain[i].val / 65536.)* (cordic_gain[i].val / 65536.);
         // fprintf(stderr, "step %02d rotate %s:  0x%08X : %f y: %f x: %f len: %f\n", i, dir, current_deg.val, current_deg.val / 65536., y.val / 65536.0, x.val / 65536.0, len);
     }
 cordic_output:
+    // fprintf(stderr, "using cordic gain at step %d\n",i);
+    i--;
     y = fixed_mul(y, cordic_gain[i]);
     x = fixed_mul(x, cordic_gain[i]);
     // fprintf(stderr, "output x: 0x%08X : %f\n", x.val, x.val / 65536.0);
