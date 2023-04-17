@@ -44,6 +44,8 @@
             #define weak _Pragma("__weak")
         #endif
     #endif
+#else /* Unknown compiler */
+    #error "Unknown compiler"
 #endif
 
 #ifndef UNUSED
