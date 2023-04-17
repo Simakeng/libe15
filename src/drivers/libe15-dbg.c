@@ -25,7 +25,7 @@ weak int32_t dev_puts(const char *s)
     while (*s != 0)
     {
         i = dev_putc(*s);
-        if(i == EOF)
+        if (i == EOF)
             return EOF;
         s++;
         cnt++;
@@ -88,7 +88,7 @@ void print(int32_t level, const char *location, const char *function, const char
             int32_t fmt_specifier = *(ch + 1);
             char spec[] = {'%', fmt_specifier, 0};
             char buf[32] = {0};
-            char* output = buf;
+            char *output = buf;
             switch (fmt_specifier)
             {
             case 'd':
@@ -144,6 +144,19 @@ void print(int32_t level, const char *location, const char *function, const char
             }
             ++ch;
             dev_puts(output);
+        }
+        // The intention is to add a '\r' character before the '\n' character.
+        // If the 'ch' pointer is pointing to the first character of the msg
+        // string, or the previous character is not '\r', then we add it.
+        else if (*ch == '\n')
+        {
+            // Because '||' is a short-circuit operator, if the first condition
+            // is true, the second one will not be evaluated. and if the first
+            // condition is false, then we can safely access the previous
+            // character.
+            if (ch == msg || *(ch - 1) != '\r')
+                dev_putc('\r');
+            dev_putc(*ch);
         }
         else
             dev_putc(*ch);

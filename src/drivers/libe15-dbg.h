@@ -77,3 +77,5 @@ typedef enum
 #endif
 
 #define debug(...) print(LDEBUG, __VA_ARGS__)
+
+#define error(...) print(LERROR, __VA_ARGS__)
