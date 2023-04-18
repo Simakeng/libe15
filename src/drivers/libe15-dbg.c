@@ -18,18 +18,34 @@ weak int32_t dev_putc(int ch)
     return EOF;
 }
 
+static volatile int32_t last_char = 0x00;
+
+int32_t putc_warper(int ch)
+{
+    last_char = ch;
+    return dev_putc(ch);
+}
+
 weak int32_t dev_puts(const char *s)
 {
     int32_t i = 0;
     int32_t cnt = 0;
     while (*s != 0)
     {
-        i = dev_putc(*s);
+        i = putc_warper(*s);
         if (i == EOF)
             return EOF;
         s++;
         cnt++;
     }
+    return cnt;
+}
+
+int32_t puts_warper(const char *s)
+{
+    int32_t cnt = dev_puts(s);
+    if (cnt != EOF)
+        last_char = *(s + cnt - 1);
     return cnt;
 }
 
@@ -62,23 +78,27 @@ void print(int32_t level, const char *location, const char *function, const char
     UNUSED(function);
     UNUSED(level);
 
+    if (last_char == '\n' || last_char == '\0')
+    {
+
 #ifndef CONFIG_OMIT_LEVEL
-    dev_puts("[");
-    dev_puts(translate_level(level));
-    dev_puts("] ");
+        dev_puts("[");
+        dev_puts(translate_level(level));
+        dev_puts("] ");
 #endif
 
 #ifndef CONFIG_OMIT_LOCATION
-    dev_puts("[");
-    dev_puts(location);
-    dev_puts("] ");
+        dev_puts("[");
+        dev_puts(location);
+        dev_puts("] ");
 #endif
 
 #ifndef CONFIG_OMIT_FUNCTION_NAME
-    dev_puts("[");
-    dev_puts(function);
-    dev_puts("] ");
+        dev_puts("[");
+        dev_puts(function);
+        dev_puts("] ");
 #endif
+    }
 
     const char *ch = msg;
     while (*ch != 0)
@@ -155,11 +175,11 @@ void print(int32_t level, const char *location, const char *function, const char
             // condition is false, then we can safely access the previous
             // character.
             if (ch == msg || *(ch - 1) != '\r')
-                dev_putc('\r');
-            dev_putc(*ch);
+                putc_warper('\r');
+            putc_warper(*ch);
         }
         else
-            dev_putc(*ch);
+            putc_warper(*ch);
         ++ch;
     }
 
