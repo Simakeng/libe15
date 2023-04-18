@@ -13,10 +13,13 @@
 
 #include <string.h>
 
+#include <libe15-dbg.h>
+
 enum
 {
     RX_STATE_IDLE,
     RX_STATE_IN_PROGRESS,
+    RX_STATE_IGNORE,
     RX_STATE_OVERFLOW,
 };
 
@@ -54,19 +57,21 @@ static const uint16_t modbus_crc_table[256] = {
     0x4400, 0x84C1, 0x8581, 0x4540, 0x8701, 0x47C0, 0x4680, 0x8641,
     0x8201, 0x42C0, 0x4380, 0x8341, 0x4100, 0x81C1, 0x8081, 0x4040};
 
-#define MODBUS_CRC_CALC(crc, data)    \
-    do                                \
-    {                                 \
-        uint8_t xor = (data) ^ (crc); \
-        crc >>= 8;                    \
-        crc ^= modbus_crc_table[xor]; \
+#define MODBUS_CRC_CALC(crc, data)                 \
+    do                                             \
+    {                                              \
+        uint8_t xor_val = ((data) ^ (crc)) & 0xFF; \
+        (crc) >>= 8;                               \
+        (crc) ^= modbus_crc_table[xor_val];        \
     } while (0U)
 
 static inline uint16_t modbus_crc_calc(uint8_t *pdata, uint32_t size)
 {
     uint16_t crc = 0xFFFF;
-    while (size--)
-        MODBUS_CRC_CALC(crc, pdata[size]);
+    for (int i = 0; i < size; i++)
+    {
+        MODBUS_CRC_CALC(crc, pdata[i]);
+    }
 
     return crc;
 }
@@ -78,7 +83,7 @@ void modbus_slave_recv_cplt_handler(modbus_slave_t *slave)
 
     uint16_t crc = slave->crc;
 
-    uint16_t recv_crc = (recv_buf[recv_cnt - 2] << 8) | recv_buf[recv_cnt - 1];
+    uint16_t recv_crc = (recv_buf[recv_cnt - 1] << 8) | recv_buf[recv_cnt - 2];
 
     if (recv_crc != crc)
     {
@@ -86,7 +91,8 @@ void modbus_slave_recv_cplt_handler(modbus_slave_t *slave)
         return;
     }
 
-    uint32_t func = recv_buf[0];
+    uint32_t func = recv_buf[1];
+    uint32_t tx_total = 0;
 
     switch (func)
     {
@@ -98,54 +104,112 @@ void modbus_slave_recv_cplt_handler(modbus_slave_t *slave)
         uint16_t tx_crc = modbus_crc_calc(slave->send_buf, 3);
         slave->send_buf[3] = tx_crc & 0xFF;
         slave->send_buf[4] = tx_crc >> 8;
-        slave->desc->set_send_buffer(5, slave->send_buf);
+        tx_total = 5;
     }
     break;
     }
+
+    slave->rx_cnt = 0;
+
+    if (tx_total == 0)
+        return;
+
+    error_t result = slave->desc->request_pdu_transmit(tx_total, slave->send_buf);
+    if (result == ALL_OK)
+    {
+        slave->tx_total = tx_total;
+    }
+    else
+    {
+        slave->tx_total = 0;
+        memset(slave->send_buf, 0, sizeof(slave->send_buf));
+    }
+}
+
+uint32_t modbus_slave_send_get_data(modbus_slave_t *slave, uint8_t *data_out)
+{
+    if (slave->tx_total == 0)
+    {
+        *data_out = 0;
+        return MODBUS_SEND_CPLT;
+    }
+
+    *data_out = slave->send_buf[slave->tx_cnt];
+    slave->tx_cnt++;
+    if (slave->tx_total == slave->tx_cnt)
+    {
+        slave->tx_cnt = 0;
+        slave->tx_total = 0;
+    }
+    return MODBUS_SEND_NORMAL;
 }
 
 void modbus_slave_recv_handler(modbus_slave_t *slave, uint32_t byte, uint32_t state)
 {
     switch (state)
     {
-    case MODBUS_RECV_START:
-        if (byte == 0 || byte == slave->slave_addr)
+    case MODBUS_RECV_DATA:
+        // this is first byte
+        if (slave->rx_state == RX_STATE_IDLE)
         {
-            slave->rx_cnt = 0;
-            memset(slave->recv_buf, 0, sizeof(slave->recv_buf));
-            slave->rx_state = RX_STATE_IN_PROGRESS;
-            MODBUS_CRC_CALC(slave->crc, byte);
+            // 0: broadcast check if this packet need to be processed
+            if (byte == 0 || byte == slave->slave_addr)
+            {
+                memset(slave->recv_buf, 0, sizeof(slave->recv_buf));
+                slave->recv_buf[0] = byte;
+                slave->rx_cnt = 1;
+                slave->rx_state = RX_STATE_IN_PROGRESS;
+            }
+            else
+            {
+                // if this packet is not for this slave, ignore it
+                slave->rx_state = RX_STATE_IGNORE;
+                goto clear_slave_recv_buf;
+            }
         }
-        else
-        {
-            slave->rx_state = RX_STATE_IDLE;
-            goto reset_slave_to_idle;
-        }
-        break;
-    case MODBUS_RECV_ACTIVE:
-        if (slave->rx_state == RX_STATE_IN_PROGRESS)
+        else if (slave->rx_state == RX_STATE_IN_PROGRESS)
         {
             slave->recv_buf[slave->rx_cnt] = byte;
+
+            int32_t crc_off = slave->rx_cnt - 2;
+            if (crc_off >= 0)
+                MODBUS_CRC_CALC(slave->crc, slave->recv_buf[crc_off]);
+            else
+                slave->crc = 0xFFFF;
+
             slave->rx_cnt++;
-            MODBUS_CRC_CALC(slave->crc, byte);
 
             if (slave->rx_cnt >= sizeof(slave->recv_buf))
             {
-                goto reset_slave_to_idle;
+                // can't process this packet, ignore it
                 slave->rx_state = RX_STATE_OVERFLOW;
+                goto clear_slave_recv_buf;
             }
         }
         break;
+    case MODBUS_RECV_ERROR:
+        if (slave->rx_state == RX_STATE_IN_PROGRESS)
+        {
+            // error occurred, ignore this packet
+            slave->rx_state = RX_STATE_IGNORE;
+            goto clear_slave_recv_buf;
+        }
+        else
+            break;
     case MODBUS_RECV_END:
-        modbus_slave_recv_cplt_handler(slave);
-        break;
+        if (slave->rx_state == RX_STATE_IDLE)
+            return;
+        else if (slave->rx_state == RX_STATE_IN_PROGRESS)
+            modbus_slave_recv_cplt_handler(slave);
+        // there is no 'break' stmt, so it will fall through to the next case
+        // reset state to RX_STATE_IDLE, crc to 0xFFFF and clear recv_buf
     default:
         slave->rx_state = RX_STATE_IDLE;
-        goto reset_slave_to_idle;
+        goto clear_slave_recv_buf;
     }
     return;
 
-reset_slave_to_idle:
+clear_slave_recv_buf:
     slave->rx_cnt = 0;
     memset(slave->recv_buf, 0, sizeof(slave->recv_buf));
     slave->crc = 0xFFFF;
@@ -161,12 +225,11 @@ error_t modbus_slave_init(modbus_slave_t *slave, const modbus_slave_init_t *desc
     if (desc->input_reg_cnt != 0 && desc->input_regs == NULL)
         return E_INVALID_ARGUMENT;
 
-    if (desc->set_send_buffer == NULL)
+    if (desc->request_pdu_transmit == NULL)
         return E_INVALID_ARGUMENT;
-
+    memset(slave, 0, sizeof(modbus_slave_t));
     slave->desc = desc;
     slave->slave_addr = slave_addr;
-    memset(slave->recv_buf, 0, sizeof(slave->recv_buf));
     slave->rx_cnt = 0;
     slave->rx_state = RX_STATE_IDLE;
     slave->crc = 0xFFFF;

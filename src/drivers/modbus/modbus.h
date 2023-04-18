@@ -16,8 +16,8 @@ typedef struct
 {
     uint16_t reg_start_addr;
     uint32_t reg_map_len;
-    error_t (*read_handler)(uint16_t addr, uint16_t *data, uint8_t *error_code_out);
-    error_t (*write_handler)(uint16_t offset, uint16_t data, uint8_t *error_code_out);
+    error_t (*read_handler)(uint32_t offset, uint32_t size, uint8_t *data, uint8_t *error_code_out);
+    error_t (*write_handler)(uint32_t offset, uint32_t data, uint8_t *error_code_out);
     void *usr_ptr;
 } modbus_reg_desc_t;
 
@@ -135,28 +135,28 @@ enum
 enum
 {
     MODBUS_FN_READ_DISCRETE_INPUTS = 0x02,
-    
-    MODBUS_FN_READ_COILS                        = 0x01,
-    MODBUS_FN_WRITE_SINGLE_COIL                 = 0x05,
-    MODBUS_FN_WRITE_MULTIPLE_COILS              = 0x0F,
 
-    MODBUS_FN_READ_INPUT_REGISTERS              = 0x04,
-    MODBUS_FN_READ_HOLDING_REGISTERS            = 0x03,
-    MODBUS_FN_WRITE_SINGLE_REGISTER             = 0x06,
-    MODBUS_FN_WRITE_MULTIPLE_REGISTERS          = 0x10,
-    MODBUS_FN_READ_WRITE_MULTIPLE_REGISTERS     = 0x17,
-    MODBUS_FN_MASK_WRITE_REGISTER               = 0x16,
-    MODBUS_FN_READ_FIFO_QUEUE                   = 0x18,
+    MODBUS_FN_READ_COILS = 0x01,
+    MODBUS_FN_WRITE_SINGLE_COIL = 0x05,
+    MODBUS_FN_WRITE_MULTIPLE_COILS = 0x0F,
 
-    MODBUS_FN_READ_FILE_RECORD                  = 0x14,
-    MODBUS_FN_WRITE_FILE_RECORD                 = 0x15,
-    
-    MODBUS_FN_READ_EXCEPTION_STATUS             = 0x07,
-    MODBUS_FN_DIAGNOSTICS                       = 0x08,
-    MODBUS_FN_GET_COMM_EVENT_COUNTER            = 0x0B,
-    MODBUS_FN_GET_COMM_EVENT_LOG                = 0x0C,
-    MODBUS_FN_REPORT_SLAVE_ID                   = 0x11,
-    MODBUS_FN_ENCAPSULATED_INTERFACE_TRANSPORT  = 0x2B,
+    MODBUS_FN_READ_INPUT_REGISTERS = 0x04,
+    MODBUS_FN_READ_HOLDING_REGISTERS = 0x03,
+    MODBUS_FN_WRITE_SINGLE_REGISTER = 0x06,
+    MODBUS_FN_WRITE_MULTIPLE_REGISTERS = 0x10,
+    MODBUS_FN_READ_WRITE_MULTIPLE_REGISTERS = 0x17,
+    MODBUS_FN_MASK_WRITE_REGISTER = 0x16,
+    MODBUS_FN_READ_FIFO_QUEUE = 0x18,
+
+    MODBUS_FN_READ_FILE_RECORD = 0x14,
+    MODBUS_FN_WRITE_FILE_RECORD = 0x15,
+
+    MODBUS_FN_READ_EXCEPTION_STATUS = 0x07,
+    MODBUS_FN_DIAGNOSTICS = 0x08,
+    MODBUS_FN_GET_COMM_EVENT_COUNTER = 0x0B,
+    MODBUS_FN_GET_COMM_EVENT_LOG = 0x0C,
+    MODBUS_FN_REPORT_SLAVE_ID = 0x11,
+    MODBUS_FN_ENCAPSULATED_INTERFACE_TRANSPORT = 0x2B,
 };
 
 typedef struct
@@ -167,17 +167,36 @@ typedef struct
     modbus_reg_desc_t *holding_regs;
     uint8_t holding_reg_cnt;
 
-    error_t (*set_send_buffer)(uint32_t size, const void *pdata);
+    /**
+     * @brief This is a callback function to setup a Protocal Data Unit (PDU) transmit
+     * @param size the size of the PDU
+     * @param pdata the pointer to the PDU
+     * @return error code 0 for success, < 0 failed, > 0 no more action need.
+     * @note User should implement this function to setup the system for transmitting the PDU.
+     * If the user intends to use IRQ to transmit the PDU, the user should call
+     * `modbus_slave_send_get_data` function in the IRQ handler to get the data. in this function
+     * user should only prepare the hardware. In this case, the return value of this function should
+     * be 0 (ALL_OK), ** and this is the intended behavior **.
+     *
+     * If the user intends to use DMA to transmit the PDU, after setting up the DMA in this callback,
+     * the user should call `modbus_slave_send_get_data` with flag `MODBUS_SEND_CPLT` to notify
+     * the modbus driver.
+     *
+     * If the user sent the PDU within this callback, the return value of this function
+     * should be greater than 0.
+     */
+    error_t (*request_pdu_transmit)(uint32_t size, const void *pdata);
 } modbus_slave_init_t;
 
 typedef struct
 {
-    const modbus_slave_init_t * desc;
+    const modbus_slave_init_t *desc;
 
     uint8_t recv_buf[32];
-    uint32_t send_buf[32];
-    uint32_t tx_cnt;
-    uint32_t rx_cnt;
+    uint8_t send_buf[32];
+    uint8_t tx_cnt;
+    uint8_t tx_total;
+    uint8_t rx_cnt;
 
     uint8_t slave_addr;
 
@@ -188,12 +207,17 @@ typedef struct
 
 enum
 {
-    /// indicates this is the first byte of a modbus frame
-    MODBUS_RECV_START,
-    /// normal reciveing
-    MODBUS_RECV_ACTIVE,
+    /// new byte coming
+    MODBUS_RECV_DATA,
     /// the last byte is received, this byte is invalid
     MODBUS_RECV_END,
+    /// there is an error occured in the reciveing
+    MODBUS_RECV_ERROR,
+
+    /// this function call returns a valid byte
+    MODBUS_SEND_NORMAL,
+    /// this function call returns a invalid byte, and there will be no more bytes.
+    MODBUS_SEND_CPLT,
 };
 
 /**
@@ -208,3 +232,5 @@ void modbus_slave_recv_handler(modbus_slave_t *slave, uint32_t byte, uint32_t st
 error_t modbus_slave_init(modbus_slave_t *slave, const modbus_slave_init_t *desc, uint8_t slave_addr);
 
 error_t modbus_slave_set_addr(modbus_slave_t *slave, uint8_t slave_addr);
+
+uint32_t modbus_slave_send_get_data(modbus_slave_t *slave, uint8_t *data_out);

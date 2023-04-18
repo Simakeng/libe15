@@ -17,6 +17,7 @@ typedef int32_t error_t;
 
 
 #define E_INVALID_ARGUMENT      -(90001)
+#define E_INVALID_ADDRESS       -(90002)
 
 
 #define E_HARDWARE_ERROR        -(60001)
