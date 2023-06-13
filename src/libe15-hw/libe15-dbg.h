@@ -14,7 +14,7 @@
 
 // If you want to disable all the debug messages,
 // uncomment the line below this will save you some ROM space
-// #define CONFIG_OMIT_MESSAGE 1
+#define CONFIG_OMIT_MESSAGE 1
 
 
 // If you dont want to print the location of the function call
@@ -72,10 +72,16 @@ typedef enum
 
 #ifdef CONFIG_OMIT_MESSAGE
 #define print(code) ((void)0)
+
+#define debug(...) ((void)0)
+
+#define error(...) ((void)0)
+
 #else
 #define print(level, ...) print(level, DBG_TRANSLATE_LOCATION(__FILE__, __LINE__), __FUNCTION__, __VA_ARGS__)
-#endif
 
 #define debug(...) print(LDEBUG, __VA_ARGS__)
 
 #define error(...) print(LERROR, __VA_ARGS__)
+#endif
+
