@@ -137,7 +137,7 @@ int get_fmt_string(const char *start, const char **end_out)
 }
 
 #undef print
-void print(int32_t level, const char *location, const char *function, const char *msg, ...)
+void dbg_print(int32_t level, const char *location, const char *function, const char *msg, ...)
 {
     va_list args;
     va_start(args, msg);

@@ -10,11 +10,11 @@
  */
 
 #include <stdint.h>
-#include <enviroment.h>
+#include "enviroment.h"
 
 // If you want to disable all the debug messages,
 // uncomment the line below this will save you some ROM space
-#define CONFIG_OMIT_MESSAGE 1
+// #define CONFIG_OMIT_MESSAGE 1
 
 
 // If you dont want to print the location of the function call
@@ -39,7 +39,7 @@
  * @param msg The message to print
  * @param ... The arguments to the message
  */
-void print(int32_t level, const char *location, const char *function, const char *msg, ...);
+void dbg_print(int32_t level, const char *location, const char *function, const char *msg, ...);
 
 /**
  * @brief put a char into an output device
@@ -66,6 +66,8 @@ typedef enum
     LERROR,
     LFATAL
 } debug_msg_level_e;
+
+
 #define DBG_TRANSLATE_LINE(line) #line
 
 #define DBG_TRANSLATE_LOCATION(file, line) file ":" DBG_TRANSLATE_LINE(line)
@@ -78,7 +80,7 @@ typedef enum
 #define error(...) ((void)0)
 
 #else
-#define print(level, ...) print(level, DBG_TRANSLATE_LOCATION(__FILE__, __LINE__), __FUNCTION__, __VA_ARGS__)
+#define print(level, ...) dbg_print(level, DBG_TRANSLATE_LOCATION(__FILE__, __LINE__), __FUNCTION__, __VA_ARGS__)
 
 #define debug(...) print(LDEBUG, __VA_ARGS__)
 
